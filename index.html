@@ -16,8 +16,8 @@
 			<tr>
 				<td>贷款时长</td>
 				<td>
-					<input id="years" placeholder="贷款年" value="25" onchange="cal();"/>年
-					<input id="months" placeholder="贷款月" value="0" onchange="cal();"/>月
+					<input id="years" placeholder="贷款年数" value="25" onchange="cal();"/>年 + 
+					<input id="months" placeholder="贷款月数" value="0" onchange="cal();"/>月
 				</td>
 			</tr>
 			<tr>
@@ -46,26 +46,29 @@
 	</body>
 	<script>
 		function cal(){
-			// 贷款金额（向下取整）
-			var loan = parseInt(document.getElementById("loan").value) * 10000
-			console.log('loan', loan)
+			// 贷款金额
+			var loan = parseFloat(document.getElementById("loan").value) * 10000
 			// 贷款年限
-			var years = parseInt(document.getElementById("years").value)
-			console.log('years', years)
+			var years = parseInt(document.getElementById("years").value) || 0
 			// 贷款月份
-			var months = parseInt(document.getElementById("months").value)
-			console.log('months', months)
-			// 贷款月份
-			var rate = parseFloat(document.getElementById("rate").value / 100)
-			console.log('rate', rate)
+			var months = parseInt(document.getElementById("months").value) || 0
+			// 贷款利率
+			var rate = parseFloat(document.getElementById("rate").value / 100) || 0.0475
+
+			var totalMonths = years * 12 + months
+
+			if (!loan || !totalMonths) {
+				document.getElementById("monthDetail").innerHTML = ''
+				return
+			}
 
 			// 月供
-			var loanPerMonth = loan * (rate / 12 * Math.pow((1 + rate / 12), years * 12 + months)) / (Math.pow((1 + rate / 12), years * 12 + months) - 1)
-			document.getElementById('loanPerMonth').innerHTML = loanPerMonth.toFixed(2)
+			var loanPerMonth = loan * (rate / 12 * Math.pow((1 + rate / 12), totalMonths)) / (Math.pow((1 + rate / 12), totalMonths) - 1)
+			document.getElementById('loanPerMonth').innerHTML = loanPerMonth ? loanPerMonth.toFixed(2) : '?'
 
 			// 总利息
-			var totalInterest = loanPerMonth * (years * 12 + months) - loan
-			document.getElementById('totalInterest').innerHTML = totalInterest.toFixed(2)
+			var totalInterest = loanPerMonth * totalMonths - loan
+			document.getElementById('totalInterest').innerHTML = totalInterest ? totalInterest.toFixed(2) : '?'
 
 			// 贷款还款明细
 			var monthA = []
@@ -73,7 +76,7 @@
 			var currentInterest = 0
 			var totalbj = 0
 			var rows = '<tr><th>月数</th><th>本金</th><th>利息</th><th>已还本金</th><th>已付利息</th><th>剩余本金</th></tr>'
-			for(var i = 0;i < years * 12; i++){
+			for(var i = 0;i < totalMonths; i++){
 				monthA[i] = loan * rate / 12
 				currentInterest = currentInterest + monthA[i]
 				monthB[i] = loanPerMonth - monthA[i]
@@ -86,7 +89,7 @@
 				}
 				rows += '<td>第'+(parseInt(i / 12) + 1)+'年第'+( i % 12 + 1)+'月</td><td>'+monthB[i].toFixed(2)+'</td><td>'+monthA[i].toFixed(2)+'</td><td>'+totalbj.toFixed(2)+'</td><td>'+currentInterest.toFixed(2)+'</td><td>'+loan.toFixed(2)+'</td></tr>'
 			}
-			document.getElementById("monthDetail").innerHTML = rows
+			document.getElementById("monthDetail").innerHTML = rows				
 		}
 		cal();
 
@@ -126,11 +129,20 @@
 	}
 
 	input {
-		width:  100px;
+		border: 1px solid grey;
+		text-align:  center;
+		width:  150px;
 		height:  60px;
 		font-size: 30px;
 		margin: 0 20px;
-		border: none
+	}
+
+	#loan {
+		width: 300px;
+	}
+
+	#rate {
+		width: 200px;
 	}
 
 </style>
